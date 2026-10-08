@@ -91,6 +91,8 @@ body.light ::-webkit-scrollbar-thumb{background:linear-gradient(#b7c4d8,#94a4bd)
 @keyframes popIn{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}
 @keyframes skel{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@keyframes spinWheel{from{transform:rotate(0)}to{transform:rotate(var(--spin-deg,1440deg))}}
+@keyframes bounceIn{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
 
 /* ============ LOGIN ============ */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px 18px;position:relative;overflow:hidden}
@@ -235,6 +237,59 @@ body.light .hero{background:radial-gradient(circle at 90% 0%,rgba(34,168,255,.16
 .mini-stat .ms-val{font-size:1.3rem;font-weight:900;line-height:1.2;background:linear-gradient(120deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .mini-stat .ms-lbl{color:var(--muted);font-size:11px;font-weight:700}
 
+/* ============ HOW IT WORKS ============ */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:14px}
+.how-step{
+  position:relative;padding:20px 16px;border-radius:18px;
+  background:linear-gradient(160deg,rgba(77,212,255,.08),rgba(160,107,255,.05));
+  border:1px solid var(--line);text-align:center;
+  transition:.3s cubic-bezier(.2,.9,.3,1);
+}
+.how-step:hover{transform:translateY(-4px);border-color:var(--line-hi);box-shadow:0 18px 40px rgba(77,212,255,.2)}
+.how-num{
+  position:absolute;top:-12px;right:14px;width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;
+  font-weight:900;font-size:14px;display:grid;place-items:center;
+  box-shadow:0 6px 20px rgba(77,212,255,.5);
+}
+.how-icon{font-size:34px;display:block;margin-bottom:8px}
+.how-title{font-weight:900;font-size:14px;color:var(--txt);margin-bottom:6px}
+.how-desc{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+/* ============ FEATURES ============ */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.feature-card{
+  padding:18px 14px;border-radius:16px;text-align:center;
+  background:linear-gradient(160deg,rgba(77,212,255,.06),rgba(160,107,255,.04));
+  border:1px solid var(--line);transition:.25s;
+}
+.feature-card:hover{transform:translateY(-3px);border-color:var(--line-hi);box-shadow:0 14px 34px rgba(0,0,0,.3)}
+.feature-icon{font-size:30px;display:block;margin-bottom:8px}
+.feature-title{font-weight:900;font-size:13.5px;color:var(--txt);margin-bottom:5px}
+.feature-desc{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ============ TESTIMONIALS ============ */
+.testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
+.testimonial{
+  padding:18px;border-radius:18px;position:relative;
+  background:linear-gradient(160deg,rgba(255,209,102,.08),rgba(255,77,210,.05));
+  border:1px solid rgba(255,209,102,.2);
+}
+.testimonial::before{
+  content:'"';position:absolute;top:6px;right:16px;font-size:60px;
+  color:var(--gold);opacity:.18;font-family:Georgia,serif;line-height:1;
+}
+.testimonial-text{font-size:13.5px;color:var(--txt-2);line-height:1.75;margin-bottom:12px;font-style:italic}
+.testimonial-author{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px dashed var(--line)}
+.testimonial-avatar{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;
+  font-weight:900;font-size:14px;flex-shrink:0;
+}
+.testimonial-name{font-weight:900;font-size:13px;color:var(--txt)}
+.testimonial-role{font-size:11px;color:var(--muted)}
+.testimonial-stars{color:var(--gold);font-size:12px;margin-top:3px}
+
 /* ============ FORM ============ */
 input,select,textarea{
   width:100%;background:rgba(8,12,20,.88);border:1px solid var(--line);color:var(--txt);
@@ -277,6 +332,8 @@ body.light .btn{background:linear-gradient(145deg,#fff,#eef3fb)}
 .btn.danger{background:linear-gradient(145deg,rgba(80,26,34,.95),rgba(50,16,22,.95));border-color:rgba(255,92,122,.4);color:#ff9aae}
 body.light .btn.danger{background:linear-gradient(145deg,#fff0f3,#ffe0e6);color:#c0264a}
 .btn.danger:hover{border-color:rgba(255,92,122,.7);box-shadow:0 12px 30px rgba(255,92,122,.25)}
+.btn.gold{background:linear-gradient(135deg,#ffd166,#ffb347);color:#3d2600;border:none;font-weight:900}
+.btn.gold:hover{filter:brightness(1.1);box-shadow:0 12px 30px rgba(255,209,102,.5)}
 .btn:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
 
 /* ============ GRID + TILES ============ */
@@ -335,6 +392,19 @@ body.light .back{background:linear-gradient(145deg,#fff,#eef3fb)}
 body.light .result.ok{background:linear-gradient(135deg,#e7f9ee,#d7f5e3);color:#0a7a44;border-color:rgba(10,155,90,.4)}
 body.light .result.err{background:linear-gradient(135deg,#fee8ed,#fcd5dd);color:#b82248;border-color:rgba(211,53,84,.4)}
 body.light .result.info{background:linear-gradient(135deg,#e5f4fe,#d4ecfc);color:#0a6ca0;border-color:rgba(14,145,214,.4)}
+
+/* ============ INLINE ALERT (بديل Toast) ============ */
+.inline-alert{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
+  padding:12px 24px;border-radius:14px;font-weight:800;font-size:13.5px;
+  background:linear-gradient(145deg,rgba(24,32,50,.98),rgba(12,18,30,.98));
+  color:#fff;border:1px solid var(--line-hi);
+  box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 30px rgba(77,212,255,.3);
+  z-index:500;opacity:0;transition:.35s cubic-bezier(.2,1.2,.3,1);pointer-events:none;
+  backdrop-filter:blur(20px);
+}
+body.light .inline-alert{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342}
+.inline-alert.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ============ MISC ============ */
 .ref-box{display:flex;gap:10px;margin-bottom:16px;margin-top:14px}
@@ -404,38 +474,109 @@ body.light .notif-panel{box-shadow:0 30px 80px rgba(30,60,120,.2)}
 .notif-item .ni-time{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
 .notif-empty{padding:30px 20px;text-align:center;color:var(--muted);font-size:13.5px}
 
-/* ============ SUPPORT ============ */
-.support-fab{
-  position:fixed;bottom:20px;left:20px;z-index:70;
-  width:54px;height:54px;border-radius:50%;
-  background:linear-gradient(135deg,#4dd4ff,#a06bff);color:#fff;
-  border:none;cursor:pointer;font-size:22px;
-  box-shadow:0 14px 34px rgba(77,212,255,.45),0 0 30px rgba(77,212,255,.3);
-  display:grid;place-items:center;transition:.3s cubic-bezier(.2,1.2,.4,1);
+/* ============ WHEEL ============ */
+.wheel-wrap{position:relative;width:280px;height:280px;margin:20px auto;display:grid;place-items:center}
+.wheel-pointer{
+  position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
+  border-top:26px solid var(--gold);filter:drop-shadow(0 4px 12px rgba(255,209,102,.6));z-index:5;
 }
-.support-fab:hover{transform:scale(1.1) rotate(-8deg)}
-.support-fab .dot{position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:#4dffa0;box-shadow:0 0 10px #4dffa0;display:none}
-.support-chat{position:fixed;bottom:0;left:0;right:0;z-index:290;max-width:480px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-bottom:none;border-radius:24px 24px 0 0;max-height:75vh;display:none;flex-direction:column;box-shadow:0 -20px 60px rgba(0,0,0,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.support-chat.show{display:flex;animation:slideUp .35s cubic-bezier(.2,1.1,.3,1) both}
-.support-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
-.support-header h3{margin:0;font-size:1rem;font-weight:900;color:var(--txt)}
-.support-header .close-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;padding:4px 8px;border-radius:10px}
-.support-header .close-x:hover{background:rgba(255,92,122,.15);color:var(--red)}
-.support-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px}
-.support-msg{max-width:80%;padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.55;word-wrap:break-word}
-.support-msg.user{align-self:flex-end;background:linear-gradient(135deg,#4dd4ff,#22a8ff);color:#04121c;font-weight:600;border-bottom-left-radius:4px}
-.support-msg.admin{align-self:flex-start;background:rgba(30,40,60,.9);color:var(--txt);border:1px solid var(--line);border-bottom-right-radius:4px}
-body.light .support-msg.admin{background:#eef3fb}
-.support-msg .sm-time{display:block;font-size:10px;margin-top:4px;opacity:.7}
-.support-input-wrap{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);align-items:flex-end}
-.support-input-wrap textarea{margin:0;min-height:44px;max-height:120px;padding:11px 14px;border-radius:14px;font-size:14px}
-.support-input-wrap button{flex-shrink:0;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#4dd4ff,#a06bff);color:#fff;border:none;cursor:pointer;font-size:18px;display:grid;place-items:center;transition:.2s}
-.support-input-wrap button:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.wheel-disc{
+  width:100%;height:100%;border-radius:50%;position:relative;
+  box-shadow:0 0 50px rgba(77,212,255,.4),inset 0 0 30px rgba(0,0,0,.3),0 20px 40px rgba(0,0,0,.4);
+  background:conic-gradient(
+    #7a869e 0deg 60deg,
+    #4dd4ff 60deg 120deg,
+    #a06bff 120deg 180deg,
+    #4dffa0 180deg 240deg,
+    #ffd166 240deg 300deg,
+    #ff4dd2 300deg 360deg
+  );
+  border:6px solid var(--bg);
+  transition:transform 4s cubic-bezier(.17,.67,.32,1.05);
+}
+.wheel-disc.spinning{animation:spinWheel 4s cubic-bezier(.17,.67,.32,1.05) forwards}
+.wheel-label{
+  position:absolute;top:50%;left:50%;font-size:11px;font-weight:900;color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,.8);
+}
+.wheel-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:70px;height:70px;border-radius:50%;
+  background:radial-gradient(circle,rgba(24,32,50,.98),rgba(10,14,24,.98));
+  border:3px solid var(--gold);color:var(--gold);
+  display:grid;place-items:center;font-size:26px;font-weight:900;
+  box-shadow:0 0 30px rgba(255,209,102,.5),inset 0 0 20px rgba(0,0,0,.5);
+  z-index:4;
+}
+.wheel-result{
+  margin-top:20px;padding:20px;border-radius:18px;text-align:center;
+  background:linear-gradient(145deg,rgba(255,209,102,.15),rgba(255,77,210,.1));
+  border:1px solid rgba(255,209,102,.4);display:none;
+}
+.wheel-result.show{display:block;animation:bounceIn .5s cubic-bezier(.2,1.2,.3,1)}
+.wheel-result .wr-icon{font-size:50px;display:block;margin-bottom:8px}
+.wheel-result .wr-title{font-size:1.3rem;font-weight:900;color:var(--gold);margin-bottom:6px}
+.wheel-result .wr-sub{color:var(--muted);font-size:13.5px;font-weight:700}
 
-/* ============ TOAST ============ */
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(180px);background:linear-gradient(145deg,rgba(24,32,50,.98),rgba(12,18,30,.98));color:#fff;padding:13px 26px;border-radius:999px;border:1px solid rgba(77,212,255,.55);transition:transform .5s cubic-bezier(.2,1.2,.3,1);z-index:400;max-width:90%;text-align:center;font-size:13.5px;font-weight:800;backdrop-filter:blur(18px);box-shadow:0 24px 56px rgba(0,0,0,.7),0 0 44px rgba(77,212,255,.35)}
-body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;border-color:rgba(14,145,214,.5)}
-.toast.show{transform:translateX(-50%) translateY(0)}
+/* ============ TASKS ============ */
+.task-card{
+  padding:16px;border-radius:16px;margin-bottom:12px;
+  background:linear-gradient(160deg,rgba(77,212,255,.06),rgba(160,107,255,.04));
+  border:1px solid var(--line);display:flex;align-items:center;gap:14px;
+  transition:.25s;
+}
+.task-card.completed{border-color:rgba(77,255,160,.5);background:linear-gradient(160deg,rgba(77,255,160,.1),rgba(77,255,160,.04))}
+.task-card.claimed{opacity:.6}
+.task-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.task-icon{
+  width:50px;height:50px;border-radius:14px;flex-shrink:0;
+  display:grid;place-items:center;font-size:24px;
+  background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;
+  box-shadow:0 6px 20px rgba(77,212,255,.35);
+}
+.task-body{flex:1;min-width:0}
+.task-title{font-weight:900;font-size:14px;color:var(--txt);margin-bottom:6px}
+.task-progress-bar{
+  height:8px;border-radius:8px;background:rgba(0,0,0,.3);overflow:hidden;margin-bottom:6px;
+}
+.task-progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));
+  transition:width .4s ease;border-radius:8px;
+}
+.task-meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-weight:700}
+.task-reward{color:var(--gold);font-weight:900}
+.task-btn{
+  padding:9px 14px;border-radius:12px;border:none;font-weight:900;font-size:12px;
+  cursor:pointer;font-family:inherit;flex-shrink:0;
+}
+.task-btn.claim{background:linear-gradient(135deg,#4dffa0,#22c878);color:#002810;box-shadow:0 6px 20px rgba(77,255,160,.4)}
+.task-btn.claim:hover{filter:brightness(1.1)}
+.task-btn.locked{background:rgba(122,134,158,.2);color:var(--muted);cursor:not-allowed}
+.task-btn.done{background:rgba(77,255,160,.15);color:var(--green);border:1px solid rgba(77,255,160,.4);cursor:default}
+
+/* ============ ADMIN LOG ============ */
+.log-item{
+  display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line);
+  align-items:flex-start;
+}
+.log-item:last-child{border-bottom:none}
+.log-icon{
+  width:36px;height:36px;border-radius:11px;flex-shrink:0;
+  display:grid;place-items:center;font-size:16px;
+  background:rgba(160,107,255,.15);border:1px solid rgba(160,107,255,.35);
+}
+.log-body{flex:1;min-width:0}
+.log-title{font-weight:800;font-size:13px;color:var(--txt);margin-bottom:3px}
+.log-details{font-size:11.5px;color:var(--muted);font-weight:600}
+.log-time{font-size:10.5px;color:var(--muted);margin-top:3px}
+.log-role{
+  padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;
+  align-self:flex-start;flex-shrink:0;
+}
+.log-role.owner{background:rgba(255,92,122,.15);color:var(--red);border:1px solid rgba(255,92,122,.35)}
+.log-role.admin{background:rgba(255,209,102,.15);color:var(--gold);border:1px solid rgba(255,209,102,.35)}
+.log-role.moderator{background:rgba(77,212,255,.15);color:var(--cyan);border:1px solid rgba(77,212,255,.35)}
 
 /* ============ RESPONSIVE ============ */
 @media (max-width:600px){
@@ -453,10 +594,11 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
   .logo-badge{width:86px;height:86px;font-size:42px}
   .login-card h1{font-size:2rem}
   .mini-stats{grid-template-columns:repeat(2,1fr)}
-  .support-fab{bottom:14px;left:14px;width:50px;height:50px;font-size:20px}
   .user-box{gap:4px}
   .icon-btn{width:34px;height:34px;border-radius:11px;font-size:14px}
   #lang-label{font-size:10px}
+  .wheel-wrap{width:240px;height:240px}
+  .how-grid,.features-grid,.testimonials-grid{grid-template-columns:1fr}
 }
 @media (min-width:900px){
   .grid{grid-template-columns:repeat(3,1fr);gap:16px}
@@ -485,6 +627,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
 </div>
 
 <div id="app" class="screen">
+  <div id="inline-alert" class="inline-alert"></div>
 
   <header class="topbar">
     <div class="logo">🌟 NERO</div>
@@ -505,6 +648,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
   </div>
   <div id="search-panel" class="search-panel"></div>
 
+  <!-- ==================== HOME ==================== -->
   <main id="section-home" class="section active">
     <div class="card hero">
       <div class="hero-inner">
@@ -531,8 +675,118 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
       <button class="tile" data-accent="pink" onclick="showSection('redeem')"><span class="tile-icon">💎</span><span class="tile-title">استبدال نقاط</span></button>
       <button class="tile" data-accent="gold" onclick="showSection('vip')"><span class="tile-icon">👑</span><span class="tile-title">اشتراك VIP</span></button>
       <button class="tile" data-accent="cyan" onclick="showSection('history')"><span class="tile-icon">📜</span><span class="tile-title">سجل العمليات</span></button>
+      <button class="tile" data-accent="pink" onclick="showSection('wheel')"><span class="tile-icon">🎰</span><span class="tile-title">عجلة الحظ</span></button>
+      <button class="tile" data-accent="green" onclick="showSection('tasks')"><span class="tile-icon">🎯</span><span class="tile-title">المهام اليومية</span></button>
       <button class="tile admin-only" data-accent="violet" onclick="showSection('admin')" style="display:none"><span class="tile-icon">👨‍💼</span><span class="tile-title">لوحة الأدمن</span></button>
       <button class="tile owner-only" data-accent="red" onclick="showSection('owner')" style="display:none"><span class="tile-icon">⚡</span><span class="tile-title">لوحة المالك</span></button>
+    </div>
+
+    <!-- ✅ قسم: كيف يعمل الموقع -->
+    <div class="card" style="margin-top:16px">
+      <h3>🎭 كيف يعمل الموقع؟</h3>
+      <div class="how-grid">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <span class="how-icon">📱</span>
+          <div class="how-title">سجّل دخولك</div>
+          <div class="how-desc">أدخل معرّف تيليجرام الخاص بك للوصول لكل الميزات</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <span class="how-icon">🛠️</span>
+          <div class="how-title">اختر خدمة</div>
+          <div class="how-desc">اتصال، سبام آسيا، اثير، تيليجرام، جيميل — اختر ما يناسبك</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <span class="how-icon">🎁</span>
+          <div class="how-title">اجمع النقاط</div>
+          <div class="how-desc">ادعُ أصدقاءك واكسب نقطة عن كل صديق يسجّل عبر رابطك</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <span class="how-icon">👑</span>
+          <div class="how-title">ترقّ لـ VIP</div>
+          <div class="how-desc">محاولات لا محدودة، تكرار المكالمات، وأولوية في الدعم</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ قسم: الميزات -->
+    <div class="card" style="margin-top:16px">
+      <h3>✨ أفضل الميزات</h3>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <div class="feature-title">سرعة فائقة</div>
+          <div class="feature-desc">معالجة فورية للطلبات بدون انتظار</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🛡️</span>
+          <div class="feature-title">أمان تام</div>
+          <div class="feature-desc">بياناتك محمية ولا تُشارك مع أي جهة</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎰</span>
+          <div class="feature-title">عجلة الحظ</div>
+          <div class="feature-desc">جرّب حظك يومياً واربح نقاطاً مجانية</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <div class="feature-title">مهام يومية</div>
+          <div class="feature-desc">أكمل التحديات واحصل على مكافآت</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">💎</span>
+          <div class="feature-title">نظام نقاط</div>
+          <div class="feature-desc">اجمع النقاط واستبدلها بمحاولات إضافية</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎨</span>
+          <div class="feature-title">5 ثيمات</div>
+          <div class="feature-desc">اختر التصميم الذي يريح عينيك</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ قسم: شهادات المستخدمين -->
+    <div class="card" style="margin-top:16px">
+      <h3>💬 آراء المستخدمين</h3>
+      <div class="testimonials-grid">
+        <div class="testimonial">
+          <div class="testimonial-text">أفضل موقع استخدمته! السرعة ممتازة والنتائج دقيقة جداً. أنصح الجميع بتجربته.</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">أ</div>
+            <div>
+              <div class="testimonial-name">أحمد م.</div>
+              <div class="testimonial-role">مستخدم VIP</div>
+              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-text">الدعم الفني سريع جداً، ونظام النقاط يساعدني أوفر كثير. شكراً nero!</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">س</div>
+            <div>
+              <div class="testimonial-name">سارة ك.</div>
+              <div class="testimonial-role">مستخدمة نشطة</div>
+              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-text">التصميم احترافي والاستخدام سهل جداً حتى لغير التقنيين. تجربة رائعة!</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">م</div>
+            <div>
+              <div class="testimonial-name">محمد ع.</div>
+              <div class="testimonial-role">مستخدم جديد</div>
+              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -541,6 +795,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
+  <!-- ==================== SERVICES ==================== -->
   <main id="section-services" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -553,6 +808,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:14px">⭐ اضغط النجمة لتثبيت الخدمة في المفضلة (حتى 5)</p>
   </main>
 
+  <!-- ==================== CALL ==================== -->
   <main id="section-call" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('services')">← رجوع</button>
@@ -564,16 +820,16 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
       <div id="call-repeat-wrap" style="display:none">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:18px">👑</span>
-          <label style="font-size:13.5px;font-weight:800;color:var(--gold);letter-spacing:.3px">تكرار المكالمة (VIP فقط)</label>
+          <label style="font-size:13.5px;font-weight:800;color:var(--gold)">تكرار المكالمة (VIP فقط)</label>
         </div>
         <input type="number" id="call-repeat" min="1" max="5" value="1" placeholder="عدد التكرارات (1-5)">
-        <div style="font-size:12px;color:var(--muted);margin-top:-4px;margin-bottom:12px;font-weight:600">سيتم إرسال المكالمة <b style="color:var(--cyan)">1-5</b> مرات، وكل تكرار يُحسب كمحاولة.</div>
       </div>
       <button class="btn primary" onclick="submitCall()">إرسال المكالمة</button>
       <div id="call-result" class="result"></div>
     </div>
   </main>
 
+  <!-- ==================== SPAM ==================== -->
   <main id="section-spam" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('services')">← رجوع</button>
@@ -585,7 +841,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
       <input type="number" id="spam-count" placeholder="العدد (1-50)" min="1" max="50" value="5">
       <textarea id="spam-message" placeholder="الرسالة (لسبام آسيا فقط)" style="display:none"></textarea>
       <div id="spam-bulk-wrap" style="display:none">
-        <label class="file-label" id="spam-file-label">📎 رفع ملف إيميلات (txt/csv - إيميل بكل سطر)<input type="file" id="spam-bulk-file" accept=".txt,.csv"></label>
+        <label class="file-label" id="spam-file-label">📎 رفع ملف إيميلات (txt/csv)<input type="file" id="spam-bulk-file" accept=".txt,.csv"></label>
         <div style="color:var(--muted);font-size:12px;margin-bottom:11px;text-align:center">— أو —</div>
         <textarea id="spam-bulk-text" placeholder="الصق الإيميلات هنا (سطر لكل إيميل)"></textarea>
       </div>
@@ -594,6 +850,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
+  <!-- ==================== EARN ==================== -->
   <main id="section-earn" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -620,6 +877,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
+  <!-- ==================== INFO ==================== -->
   <main id="section-info" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -631,6 +889,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
+  <!-- ==================== HISTORY ==================== -->
   <main id="section-history" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -642,6 +901,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
+  <!-- ==================== TRANSFER ==================== -->
   <main id="section-transfer" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -667,6 +927,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
+  <!-- ==================== REDEEM ==================== -->
   <main id="section-redeem" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -676,6 +937,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     <div class="grid" id="redeem-grid"></div>
   </main>
 
+  <!-- ==================== VIP ==================== -->
   <main id="section-vip" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -684,6 +946,41 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     <div class="card" id="vip-card"></div>
   </main>
 
+  <!-- ==================== WHEEL ==================== -->
+  <main id="section-wheel" class="section">
+    <div class="section-head">
+      <button class="back" onclick="showSection('home')">← رجوع</button>
+      <h2>🎰 عجلة الحظ</h2>
+    </div>
+    <div class="card" style="text-align:center">
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:14px">جرّب حظك مرة واحدة كل 24 ساعة!</p>
+      <div class="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <div class="wheel-disc" id="wheel-disc"></div>
+        <div class="wheel-center" id="wheel-center">🎰</div>
+      </div>
+      <button class="btn primary" id="wheel-btn" onclick="spinWheel()">🎯 أدر العجلة</button>
+      <div class="wheel-result" id="wheel-result">
+        <span class="wr-icon">🎉</span>
+        <div class="wr-title" id="wheel-prize">0</div>
+        <div class="wr-sub" id="wheel-sub">حظاً أوفر في المرة القادمة</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== TASKS ==================== -->
+  <main id="section-tasks" class="section">
+    <div class="section-head">
+      <button class="back" onclick="showSection('home')">← رجوع</button>
+      <h2>🎯 المهام اليومية</h2>
+    </div>
+    <div class="card">
+      <h3>أكمل المهام واحصل على مكافآت</h3>
+      <div id="tasks-list"></div>
+    </div>
+  </main>
+
+  <!-- ==================== ADMIN ==================== -->
   <main id="section-admin" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
@@ -718,14 +1015,21 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
       <h3>💬 صندوق الدعم</h3>
       <div id="support-inbox"><div class="skeleton row-skel"></div><div class="skeleton row-skel"></div></div>
     </div>
+    <!-- ✅ سجل عمليات الأدمن -->
+    <div class="card">
+      <h3>📋 سجل العمليات الإدارية</h3>
+      <div id="admin-log-list"><div class="skeleton row-skel"></div><div class="skeleton row-skel"></div></div>
+    </div>
   </main>
 
+  <!-- ==================== OWNER ==================== -->
   <main id="section-owner" class="section">
     <div class="section-head">
       <button class="back" onclick="showSection('home')">← رجوع</button>
       <h2>⚡ لوحة المالك</h2>
     </div>
     <div class="card"><h3>حالة الخدمات</h3><div id="owner-buttons"></div></div>
+    <div class="card"><h3>🎛️ الميزات الإضافية</h3><div id="owner-features"></div></div>
     <div class="card"><h3>⚙️ الحدود اليومية</h3><div id="owner-limits"></div></div>
     <div class="card">
       <h3>👑 إضافة أدمن</h3>
@@ -736,6 +1040,15 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
       <button class="btn" onclick="ownerRemoveAdmin()">إزالة</button>
     </div>
     <div class="card">
+      <h3>🛡️ إدارة المشرفين</h3>
+      <input type="number" id="own-add-mod" placeholder="معرّف المشرف الجديد">
+      <button class="btn" onclick="ownerAddModerator()">رفع مشرف</button>
+      <h3 style="margin-top:20px">📉 إزالة مشرف</h3>
+      <input type="number" id="own-del-mod" placeholder="معرّف المشرف">
+      <button class="btn" onclick="ownerRemoveModerator()">إزالة</button>
+      <div id="owner-mods-list" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
       <h3>🔗 قنوات الاشتراك الإجباري</h3>
       <input type="text" id="own-chan" placeholder="@channel">
       <button class="btn" onclick="ownerAddChannel()">إضافة</button>
@@ -743,22 +1056,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     </div>
   </main>
 
-  <button class="support-fab" onclick="toggleSupport()" title="الدعم الفني">💬<span class="dot" id="support-dot"></span></button>
-
-  <div class="support-chat" id="support-chat">
-    <div class="support-header">
-      <h3>💬 الدعم الفني</h3>
-      <button class="close-x" onclick="toggleSupport()">✕</button>
-    </div>
-    <div class="support-messages" id="support-messages">
-      <div class="support-msg admin">مرحباً 👋 كيف بقدر أساعدك؟<span class="sm-time">الآن</span></div>
-    </div>
-    <div class="support-input-wrap">
-      <textarea id="support-input" placeholder="اكتب رسالتك..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendSupport();}"></textarea>
-      <button onclick="sendSupport()">➤</button>
-    </div>
-  </div>
-
+  <!-- ==================== NOTIFICATIONS PANEL ==================== -->
   <div class="notif-panel" id="notif-panel">
     <div class="notif-header">
       <h3>🔔 الإشعارات</h3>
@@ -767,6 +1065,7 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
     <div class="notif-list" id="notif-list"></div>
   </div>
 
+  <!-- ==================== MODAL ==================== -->
   <div class="modal-overlay" id="confirm-modal">
     <div class="modal-box">
       <div class="modal-icon" id="confirm-icon">⚠️</div>
@@ -778,16 +1077,15 @@ body.light .toast{background:linear-gradient(145deg,#fff,#eaf3ff);color:#0a2342;
       </div>
     </div>
   </div>
-
-  <div id="toast" class="toast"></div>
 </div>
 
 <script>
 let state = {
   me: null, services: null, currentSpam: null,
-  confirmResolve: null, notifsOpen: false, supportOpen: false,
+  confirmResolve: null, notifsOpen: false,
   favServices: [], currentTheme: 'dark', currentLang: 'ar',
-  searchDebounce: null, lastNotifCount: 0, notifPollTimer: null
+  searchDebounce: null, lastNotifCount: 0, notifPollTimer: null,
+  wheelSpinning: false
 };
 
 async function api(path, opts = {}) {
@@ -806,7 +1104,8 @@ async function api(path, opts = {}) {
 }
 
 function toast(msg, ms = 2600) {
-  const t = document.getElementById('toast');
+  const t = document.getElementById('inline-alert');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(t._id);
@@ -856,7 +1155,6 @@ async function cycleTheme() {
   const next = THEMES[(i + 1) % THEMES.length].id;
   applyThemeFull(next);
   await api('/api/theme', { method: 'POST', body: JSON.stringify({ theme: next }) });
-  toast('🎨 ' + next);
 }
 
 const TRANSLATIONS = {
@@ -865,10 +1163,7 @@ const TRANSLATIONS = {
         login_hint:'أدخل معرّف تيليجرام للدخول', login_btn:'دخول' },
   en: { home:'Home', services:'Services', earn:'Points', history:'History', info:'Account',
         search_ph:'Search history and users...', no_results:'No results',
-        login_hint:'Enter your Telegram ID to sign in', login_btn:'Sign In' },
-  ku: { home:'سەرەکی', services:'خزمەتگوزارییەکان', earn:'خاڵەکان', history:'مێژوو', info:'هەژمارم',
-        search_ph:'گەڕان لە مێژوو و بەکارهێنەران...', no_results:'هیچ ئەنجامێک نییە',
-        login_hint:'ئایدی تێلێگرام بنووسە', login_btn:'چوونەژوورەوە' }
+        login_hint:'Enter your Telegram ID to sign in', login_btn:'Sign In' }
 };
 function t(key) { return (TRANSLATIONS[state.currentLang] || TRANSLATIONS.ar)[key] || key; }
 function applyLang(lang) {
@@ -882,12 +1177,11 @@ function applyLang(lang) {
   if (search) search.placeholder = t('search_ph');
 }
 async function cycleLang() {
-  const order = ['ar','en','ku'];
+  const order = ['ar','en'];
   const i = order.indexOf(state.currentLang);
   const next = order[(i + 1) % order.length];
   applyLang(next);
   await api('/api/lang', { method: 'POST', body: JSON.stringify({ lang: next }) });
-  toast(next === 'ar' ? 'العربية 🇸🇦' : next === 'en' ? 'English 🇬🇧' : 'Kurdî 🏴');
 }
 
 function showSection(name) {
@@ -904,6 +1198,8 @@ function showSection(name) {
   if (name === 'owner') loadOwner();
   if (name === 'transfer') loadIncoming();
   if (name === 'history') loadHistory();
+  if (name === 'wheel') loadWheel();
+  if (name === 'tasks') loadTasks();
   if (name === 'home') loadHomeFeed();
 }
 
@@ -1026,7 +1322,6 @@ async function toggleFavorite(service, ev) {
     state.favServices.push(service);
   }
   await api('/api/favorites', { method: 'POST', body: JSON.stringify({ favorites: state.favServices }) });
-  toast('⭐ تم التحديث');
   loadServices();
 }
 
@@ -1085,7 +1380,7 @@ function openSpam(service) {
   }
   document.getElementById('spam-result').className = 'result';
   document.getElementById('spam-file-label').classList.remove('has-file');
-  document.getElementById('spam-file-label').innerHTML = `📎 رفع ملف إيميلات (txt/csv - إيميل بكل سطر)<input type="file" id="spam-bulk-file" accept=".txt,.csv">`;
+  document.getElementById('spam-file-label').innerHTML = `📎 رفع ملف إيميلات (txt/csv)<input type="file" id="spam-bulk-file" accept=".txt,.csv">`;
   document.getElementById('spam-bulk-text').value = '';
   bindBulkFile();
   showSection('spam');
@@ -1260,7 +1555,6 @@ async function transferAction(req_id, action) {
   }
   const { ok, data } = await api(`/api/transfer/${req_id}/${action}`, { method: 'POST' });
   if (ok && data.ok) {
-    toast(action === 'accept' ? '✅ تم القبول' : '❌ تم الرفض');
     loadIncoming(); refreshMe();
   } else toast('❌ ' + (data.error || 'فشل'));
 }
@@ -1303,6 +1597,117 @@ async function loadVip() {
     <a href="https://t.me/${data.payment_username}" target="_blank" class="btn primary" style="display:block;text-align:center;text-decoration:none;margin-top:15px">📩 تواصل للشراء</a>`;
 }
 
+// ==================== WHEEL ====================
+async function loadWheel() {
+  const { data } = await api('/api/wheel/status');
+  const btn = document.getElementById('wheel-btn');
+  const result = document.getElementById('wheel-result');
+  result.classList.remove('show');
+  if (!data.enabled) {
+    btn.disabled = true;
+    btn.textContent = '🔒 العجلة معطلة حالياً';
+    return;
+  }
+  if (!data.can_spin) {
+    btn.disabled = true;
+    btn.textContent = '⏰ عد غداً لتجربة حظك';
+  } else {
+    btn.disabled = false;
+    btn.textContent = '🎯 أدر العجلة';
+  }
+}
+async function spinWheel() {
+  if (state.wheelSpinning) return;
+  state.wheelSpinning = true;
+  const btn = document.getElementById('wheel-btn');
+  btn.disabled = true;
+  const disc = document.getElementById('wheel-disc');
+  const result = document.getElementById('wheel-result');
+  result.classList.remove('show');
+
+  // إرسال الطلب للسيرفر
+  const { ok, data } = await api('/api/wheel/spin', { method: 'POST' });
+  if (!ok || !data.ok) {
+    toast('❌ ' + (data.error || 'فشل'));
+    btn.disabled = false;
+    state.wheelSpinning = false;
+    return;
+  }
+
+  // حساب زاوية الدوران (6 أقسام × 60 درجة)
+  const prizeIdx = data.prize_index;
+  const sectorAngle = 60;
+  const targetAngle = 360 * 5 + (360 - (prizeIdx * sectorAngle + sectorAngle / 2));
+  disc.style.transform = `rotate(${targetAngle}deg)`;
+  disc.style.transition = 'transform 4s cubic-bezier(.17,.67,.32,1.05)';
+
+  setTimeout(() => {
+    result.classList.add('show');
+    document.getElementById('wheel-prize').textContent = data.label;
+    document.getElementById('wheel-sub').textContent = data.points > 0
+      ? `تمت إضافة ${data.points} نقطة لرصيدك!`
+      : 'حظاً أوفر في المرة القادمة 😅';
+    // إعادة الدوران للوضع الأصلي بدون أنيميشن
+    setTimeout(() => {
+      disc.style.transition = 'none';
+      disc.style.transform = 'rotate(0deg)';
+      setTimeout(() => {
+        disc.style.transition = 'transform 4s cubic-bezier(.17,.67,.32,1.05)';
+      }, 50);
+    }, 1500);
+    if (data.points > 0) refreshMe();
+    loadWheel();
+    state.wheelSpinning = false;
+  }, 4100);
+}
+
+// ==================== TASKS ====================
+async function loadTasks() {
+  const list = document.getElementById('tasks-list');
+  list.innerHTML = '<div class="skeleton row-skel"></div><div class="skeleton row-skel"></div>';
+  const { data } = await api('/api/tasks');
+  if (!data.enabled) {
+    list.innerHTML = '<p style="color:var(--muted);text-align:center">المهام معطلة حالياً</p>';
+    return;
+  }
+  const icons = { call_5:'📞', call_10:'🔥', spam_10:'💣', spam_25:'⚡' };
+  list.innerHTML = data.tasks.map(t => {
+    const pct = Math.min(100, (t.progress / t.target) * 100);
+    const cardCls = t.claimed ? 'claimed' : (t.completed ? 'completed' : '');
+    let btnHtml;
+    if (t.claimed) {
+      btnHtml = '<button class="task-btn done">✅ مُستلمة</button>';
+    } else if (t.completed) {
+      btnHtml = `<button class="task-btn claim" onclick="claimTask('${t.key}')">🎁 استلم</button>`;
+    } else {
+      btnHtml = `<button class="task-btn locked" disabled>🔒 ${t.target - t.progress} متبقي</button>`;
+    }
+    return `<div class="task-card ${cardCls}">
+      <div class="task-icon">${icons[t.key] || '🎯'}</div>
+      <div class="task-body">
+        <div class="task-title">${t.label}</div>
+        <div class="task-progress-bar"><div class="task-progress-fill" style="width:${pct}%"></div></div>
+        <div class="task-meta">
+          <span>${t.progress} / ${t.target}</span>
+          <span class="task-reward">+${t.reward} 💎</span>
+        </div>
+      </div>
+      ${btnHtml}
+    </div>`;
+  }).join('');
+}
+async function claimTask(key) {
+  const { ok, data } = await api('/api/tasks/claim', { method: 'POST', body: JSON.stringify({ key }) });
+  if (ok && data.ok) {
+    toast(`🎁 +${data.reward} نقطة!`);
+    await refreshMe();
+    loadTasks();
+  } else {
+    toast('❌ ' + (data.error || 'فشل'));
+  }
+}
+
+// ==================== ADMIN ====================
 async function loadAdmin() {
   const stats = document.getElementById('admin-stats');
   stats.innerHTML = '<div class="skeleton row-skel"></div><div class="skeleton row-skel"></div><div class="skeleton row-skel"></div>';
@@ -1317,6 +1722,7 @@ async function loadAdmin() {
     <div class="item-row"><span>📞 إجمالي المكالمات</span><b>${data.calls}</b></div>
     <div class="item-row"><span>💣 إجمالي السبام</span><b>${data.spam}</b></div>`;
   loadSupportInbox();
+  loadAdminLog();
 }
 async function loadSupportInbox() {
   const box = document.getElementById('support-inbox');
@@ -1334,6 +1740,33 @@ async function loadSupportInbox() {
       <button class="btn" onclick="replySupport(${t.user_id})">رد</button>`;
     box.appendChild(div);
   });
+}
+async function loadAdminLog() {
+  const list = document.getElementById('admin-log-list');
+  if (!list) return;
+  list.innerHTML = '<div class="skeleton row-skel"></div>';
+  const { data } = await api('/api/admin/log?limit=30');
+  if (!data.items || data.items.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);text-align:center">لا توجد عمليات</p>';
+    return;
+  }
+  const actionIcons = {
+    add_points: '💎', add_vip: '👑', broadcast: '📢',
+    add_admin: '🛡️', remove_admin: '📉', add_moderator: '🛡️',
+    remove_moderator: '📉', set_limit: '⚙️'
+  };
+  list.innerHTML = data.items.map(it => {
+    const icon = actionIcons[it.action] || (it.action.startsWith('toggle_') ? '🔄' : '📋');
+    return `<div class="log-item">
+      <div class="log-icon">${icon}</div>
+      <div class="log-body">
+        <div class="log-title">${it.action} ${it.target_id ? '→ ' + it.target_id : ''}</div>
+        <div class="log-details">بواسطة ${it.actor_id} ${it.details ? '• ' + it.details : ''}</div>
+        <div class="log-time">${it.time}</div>
+      </div>
+      <span class="log-role ${it.actor_role}">${it.actor_role}</span>
+    </div>`;
+  }).join('');
 }
 async function replySupport(user_id) {
   const msg = prompt('اكتب ردك:');
@@ -1367,6 +1800,7 @@ async function adminBroadcast() {
     : '❌ ' + (data.error || 'فشل');
 }
 
+// ==================== OWNER ====================
 async function loadOwner() {
   const { data } = await api('/api/owner/status');
   const names = { call:'📞 اتصال', spam_asia:'🌏 آسيا', spam_ether:'🔥 اثير', spam_telegram:'📱 تيليجرام', spam_email:'✉️ جيميل', referral:'🎁 تجميع نقاط' };
@@ -1379,6 +1813,18 @@ async function loadOwner() {
       <button class="btn" onclick="ownerToggle('${k}')">${v ? '🟢 شغال' : '🔴 مقفل'}</button>`;
     btns.appendChild(div);
   }
+
+  const feats = document.getElementById('owner-features');
+  feats.innerHTML = '';
+  const featureNames = { wheel_enabled: '🎰 عجلة الحظ', tasks_enabled: '🎯 المهام اليومية' };
+  for (const [k, v] of Object.entries({ wheel_enabled: data.wheel_enabled, tasks_enabled: data.tasks_enabled })) {
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.innerHTML = `<span>${featureNames[k]}</span>
+      <button class="btn" onclick="ownerToggleFeature('${k}')">${v ? '🟢 شغال' : '🔴 مقفل'}</button>`;
+    feats.appendChild(div);
+  }
+
   const lim = document.getElementById('owner-limits');
   lim.innerHTML = '';
   for (const [k, v] of Object.entries(data.limits)) {
@@ -1389,6 +1835,7 @@ async function loadOwner() {
       <button class="btn" onclick="ownerSetLimit('${k}')">حفظ</button></span>`;
     lim.appendChild(div);
   }
+
   const ch = document.getElementById('owner-channels');
   ch.innerHTML = data.channels.length === 0 ? '<p style="color:var(--muted)">لا توجد قنوات</p>' : '';
   data.channels.forEach(c => {
@@ -1398,10 +1845,20 @@ async function loadOwner() {
       <button class="btn danger" onclick="ownerRemoveChannel('${c}')">حذف</button>`;
     ch.appendChild(div);
   });
+
+  const mods = document.getElementById('owner-mods-list');
+  mods.innerHTML = data.moderators.length === 0
+    ? '<p style="color:var(--muted);font-size:13px">لا يوجد مشرفون</p>'
+    : '<p style="color:var(--muted);font-size:12px;margin-bottom:8px">المشرفون الحاليون:</p>' +
+      data.moderators.map(m => `<div class="item-row"><span>🛡️ ${m}</span></div>`).join('');
 }
 async function ownerToggle(service) {
   const { data } = await api(`/api/owner/toggle/${service}`, { method: 'POST' });
-  if (data.ok) { toast('✅ تم التغيير'); loadOwner(); }
+  if (data.ok) loadOwner();
+}
+async function ownerToggleFeature(feature) {
+  const { data } = await api('/api/owner/toggle_feature', { method: 'POST', body: JSON.stringify({ feature }) });
+  if (data.ok) loadOwner();
 }
 async function ownerSetLimit(service) {
   const limit = document.getElementById('lim-' + service).value;
@@ -1420,6 +1877,20 @@ async function ownerRemoveAdmin() {
   const { data } = await api('/api/owner/remove_admin', { method: 'POST', body: JSON.stringify({ user_id }) });
   toast(data.ok ? '✅ تم' : '❌ ' + (data.error || 'فشل'));
 }
+async function ownerAddModerator() {
+  const user_id = document.getElementById('own-add-mod').value;
+  const { data } = await api('/api/owner/add_moderator', { method: 'POST', body: JSON.stringify({ user_id }) });
+  toast(data.ok ? '✅ تم رفعه مشرفاً' : '❌ ' + (data.error || 'فشل'));
+  if (data.ok) loadOwner();
+}
+async function ownerRemoveModerator() {
+  const user_id = document.getElementById('own-del-mod').value;
+  const ok = await confirmDialog('إزالة مشرف', `إزالة صلاحيات المشرف من ${user_id}؟`, { okText:'إزالة', icon:'📉' });
+  if (!ok) return;
+  const { data } = await api('/api/owner/remove_moderator', { method: 'POST', body: JSON.stringify({ user_id }) });
+  toast(data.ok ? '✅ تم' : '❌ ' + (data.error || 'فشل'));
+  if (data.ok) loadOwner();
+}
 async function ownerAddChannel() {
   const username = document.getElementById('own-chan').value;
   const { data } = await api('/api/owner/add_channel', { method: 'POST', body: JSON.stringify({ username }) });
@@ -1430,7 +1901,7 @@ async function ownerRemoveChannel(username) {
   const ok = await confirmDialog('حذف قناة', `حذف القناة @${username}؟`, { okText:'حذف', icon:'🗑️' });
   if (!ok) return;
   const { data } = await api('/api/owner/remove_channel', { method: 'POST', body: JSON.stringify({ username }) });
-  if (data.ok) { toast('✅ حُذفت'); loadOwner(); }
+  if (data.ok) loadOwner();
 }
 
 async function refreshMe() {
@@ -1494,61 +1965,9 @@ function startNotifPolling() {
     const { data } = await api('/api/me');
     if (data.unread_notifications !== undefined) {
       updateNotifBadge(data.unread_notifications);
-      if (data.unread_notifications > state.lastNotifCount && state.lastNotifCount !== 0) {
-        showBrowserNotif('🔔 nero', 'لديك إشعارات جديدة');
-      }
       state.lastNotifCount = data.unread_notifications;
     }
-    const s = await api('/api/support/messages');
-    if (s.ok && s.data.items && s.data.items.length > 0) {
-      const last = s.data.items[s.data.items.length - 1];
-      if (last && last.from_admin && !state.supportOpen) {
-        const dot = document.getElementById('support-dot');
-        if (dot) dot.style.display = 'block';
-      }
-    }
   }, 15000);
-}
-
-async function toggleSupport() {
-  const chat = document.getElementById('support-chat');
-  const willShow = !chat.classList.contains('show');
-  chat.classList.toggle('show', willShow);
-  state.supportOpen = willShow;
-  if (willShow) {
-    const dot = document.getElementById('support-dot');
-    if (dot) dot.style.display = 'none';
-    await loadSupportMessages();
-    setTimeout(() => document.getElementById('support-input').focus(), 200);
-  }
-}
-async function loadSupportMessages() {
-  const box = document.getElementById('support-messages');
-  box.innerHTML = '<div class="skeleton row-skel" style="margin:8px 0"></div>';
-  const { data } = await api('/api/support/messages');
-  if (!data.items || data.items.length === 0) {
-    box.innerHTML = '<div class="support-msg admin">مرحباً 👋 كيف بقدر أساعدك؟<span class="sm-time">الآن</span></div>';
-    return;
-  }
-  box.innerHTML = data.items.map(m => `
-    <div class="support-msg ${m.from_admin ? 'admin' : 'user'}">
-      ${m.message}
-      <span class="sm-time">${m.time}</span>
-    </div>`).join('');
-  box.scrollTop = box.scrollHeight;
-}
-async function sendSupport() {
-  const inp = document.getElementById('support-input');
-  const msg = inp.value.trim();
-  if (!msg) return;
-  inp.value = '';
-  const box = document.getElementById('support-messages');
-  const div = document.createElement('div');
-  div.className = 'support-msg user';
-  div.innerHTML = `${msg}<span class="sm-time">الآن</span>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  await api('/api/support/send', { method: 'POST', body: JSON.stringify({ message: msg }) });
 }
 
 function toggleSearch() {
@@ -1603,20 +2022,13 @@ async function setupPush() {
   setTimeout(async () => {
     try {
       const perm = await Notification.requestPermission();
-      if (perm === 'granted') {
-        registerSW();
-        toast('✅ تم تفعيل الإشعارات');
-      }
+      if (perm === 'granted') registerSW();
     } catch(e) {}
   }, 2500);
 }
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   try { await navigator.serviceWorker.register('/sw.js'); } catch(e) {}
-}
-function showBrowserNotif(title, body) {
-  if (Notification.permission !== 'granted') return;
-  try { new Notification(title, { body, badge: '/static/icon.png' }); } catch(e) {}
 }
 
 (async function init() {
