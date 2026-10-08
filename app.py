@@ -10,6 +10,7 @@ import base64
 import hashlib
 import os
 import logging
+import random
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, request, jsonify, session, render_template, Response
@@ -20,7 +21,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get("SECRET_KEY", "change_me_to_random_secret")
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024  # 4MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024
 
 DB_PATH = "telz_bot.db"
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8843943729:AAFaI9SMN9Y12h6CmmUHKJk1AqmwMt6bHic")
@@ -41,7 +42,7 @@ BUTTONS_DEFAULT = {
 }
 
 VALID_SERVICES = {"call", "spam_asia", "spam_ether", "spam_telegram", "spam_email"}
-VALID_LANGS = {"ar", "en", "ku"}
+VALID_LANGS = {"ar", "en"}
 
 GREEN, RED = "🟢", "🔴"
 
@@ -65,11 +66,14 @@ def init_db():
         c.execute('''CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY, username TEXT, first_name TEXT, phone TEXT,
             is_vip INTEGER DEFAULT 0, vip_expiry TEXT, join_date TEXT,
-            is_admin INTEGER DEFAULT 0, extra_tokens INTEGER DEFAULT 0,
+            is_admin INTEGER DEFAULT 0, is_moderator INTEGER DEFAULT 0,
+            extra_tokens INTEGER DEFAULT 0,
             extra_tokens_expiry TEXT, points INTEGER DEFAULT 0,
             referrer_id INTEGER DEFAULT NULL, referral_count INTEGER DEFAULT 0,
             theme TEXT DEFAULT 'dark', lang TEXT DEFAULT 'ar',
-            fav_services TEXT DEFAULT '')''')
+            fav_services TEXT DEFAULT '',
+            last_spin TEXT, spin_streak INTEGER DEFAULT 0,
+            daily_calls INTEGER DEFAULT 0, daily_tasks_claimed TEXT DEFAULT '')''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS referral_links (
             user_id INTEGER PRIMARY KEY, link_code TEXT UNIQUE,
@@ -120,22 +124,42 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER,
             endpoint TEXT UNIQUE, p256dh TEXT, auth TEXT, created_at TEXT)''')
 
-        # ---- ترقية جداول قديمة (إضافة أعمدة بأمان) ----
-        for col, ddl in [
+        # ✅ جديد: سجل عمليات الأدمن والمشرفين
+        c.execute('''CREATE TABLE IF NOT EXISTS admin_actions_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            actor_id INTEGER, actor_role TEXT,
+            action TEXT, target_id INTEGER, details TEXT, created_at TEXT)''')
+
+        # ✅ جديد: جدول المهام اليومية
+        c.execute('''CREATE TABLE IF NOT EXISTS daily_tasks_progress (
+            user_id INTEGER, task_key TEXT, progress INTEGER DEFAULT 0,
+            claimed INTEGER DEFAULT 0, last_update TEXT,
+            PRIMARY KEY (user_id, task_key))''')
+
+        # ---- ترقية الجداول القديمة ----
+        upgrades = [
             ("theme", "TEXT DEFAULT 'dark'"),
             ("lang", "TEXT DEFAULT 'ar'"),
             ("fav_services", "TEXT DEFAULT ''"),
-        ]:
+            ("is_moderator", "INTEGER DEFAULT 0"),
+            ("last_spin", "TEXT"),
+            ("spin_streak", "INTEGER DEFAULT 0"),
+            ("daily_calls", "INTEGER DEFAULT 0"),
+            ("daily_tasks_claimed", "TEXT DEFAULT ''"),
+        ]
+        for col, ddl in upgrades:
             try:
                 c.execute(f"ALTER TABLE users ADD COLUMN {col} {ddl}")
             except Exception:
-                pass  # العمود موجود مسبقاً
+                pass
 
         for service, limit in DEFAULT_LIMITS.items():
             c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
                       (f"limit_{service}", str(limit)))
         c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('call_wait', '30')")
         c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('referral_points', '1')")
+        c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('wheel_enabled', '1')")
+        c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('tasks_enabled', '1')")
         for k, v in BUTTONS_DEFAULT.items():
             c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
                       (f"btn_{k}", "1" if v else "0"))
@@ -232,6 +256,33 @@ def is_admin(user_id):
         r = c.fetchone()
         conn.close()
     return bool(r and r[0] == 1)
+
+
+def is_moderator(user_id):
+    if is_admin(user_id):
+        return True
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('SELECT is_moderator FROM users WHERE user_id = ?', (user_id,))
+        r = c.fetchone()
+        conn.close()
+    return bool(r and r[0] == 1)
+
+
+def log_admin_action(actor_id, action, target_id=None, details=""):
+    """✅ جديد: تسجيل عمليات الأدمن والمشرفين"""
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        role = 'owner' if is_owner(actor_id) else ('admin' if is_admin(actor_id) else 'moderator')
+        c.execute('''INSERT INTO admin_actions_log
+                     (actor_id, actor_role, action, target_id, details, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?)''',
+                  (actor_id, role, action, target_id, details,
+                   datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        conn.commit()
+        conn.close()
 
 
 def is_vip(user_id):
@@ -511,6 +562,16 @@ def admin_required(f):
     return wrapper
 
 
+def moderator_required(f):
+    @wraps(f)
+    def wrapper(*a, **k):
+        uid = session.get('user_id')
+        if not uid or not is_moderator(uid):
+            return jsonify({"error": "هذه الصفحة للمشرفين فقط"}), 403
+        return f(*a, **k)
+    return wrapper
+
+
 def owner_required(f):
     @wraps(f)
     def wrapper(*a, **k):
@@ -621,7 +682,8 @@ def api_me():
     with db_lock:
         conn = get_conn()
         c = conn.cursor()
-        c.execute('SELECT first_name, username, join_date, theme, lang, fav_services FROM users WHERE user_id = ?', (uid,))
+        c.execute('''SELECT first_name, username, join_date, theme, lang, fav_services,
+                            is_moderator FROM users WHERE user_id = ?''', (uid,))
         u = c.fetchone()
         c.execute('SELECT COUNT(*) FROM calls_log WHERE user_id = ?', (uid,))
         total_calls = c.fetchone()[0]
@@ -647,6 +709,7 @@ def api_me():
         "is_vip": is_vip(uid),
         "is_admin": is_admin(uid),
         "is_owner": is_owner(uid),
+        "is_moderator": bool(u[6]) if u else False,
         "extra_tokens": get_extra_tokens(uid),
         "total_calls": total_calls,
         "total_spam": total_spam,
@@ -698,7 +761,6 @@ def api_favorites():
         favs = data.get('favorites', [])
         if not isinstance(favs, list):
             return jsonify({"error": "قائمة غير صحيحة"}), 400
-        # منع التكرار + حد أقصى 5 + فقط خدمات صحيحة
         seen = []
         for f in favs:
             if f in VALID_SERVICES and f not in seen:
@@ -828,7 +890,6 @@ def api_call():
     if not phone.startswith('+'):
         return jsonify({"error": "الرقم يجب أن يبدأ بـ +"}), 400
 
-    # ---- التكرار (VIP فقط، 1-5) ----
     try:
         repeat = int(data.get('repeat', 1))
     except Exception:
@@ -865,6 +926,9 @@ def api_call():
         f"repeat={repeat}, success={success_count}, failed={failed_count}",
         count=repeat
     )
+
+    # ✅ تحديث تقدم المهام اليومية
+    update_task_progress(uid, "call", repeat)
 
     return jsonify({
         "ok": success_count > 0,
@@ -906,7 +970,6 @@ def api_spam():
     if not get_buttons_status().get(service, True):
         return jsonify({"error": f"خدمة {name} في وضع الصيانة"}), 400
 
-    # ---- الوضع الجماعي للإيميل ----
     if spam_type == 'email' and data.get('bulk'):
         emails = data.get('targets') or []
         if not isinstance(emails, list) or len(emails) == 0:
@@ -928,6 +991,7 @@ def api_spam():
         increment_used(uid, service, len(emails))
         add_spam_log(uid, f"bulk:{len(emails)}", service, len(emails), total_ok, total_fail,
                      'نجح' if total_ok > 0 else 'فشل')
+        update_task_progress(uid, "spam", len(emails))
         return jsonify({
             "ok": True, "success": total_ok, "failed": total_fail,
             "percent": int(total_ok / max(total_ok + total_fail, 1) * 100),
@@ -961,6 +1025,7 @@ def api_spam():
     increment_used(uid, service, count)
     add_spam_log(uid, target, service, count, success, failed,
                  'نجح' if success > 0 else 'فشل')
+    update_task_progress(uid, "spam", count)
     total = success + failed or 1
     return jsonify({
         "ok": True, "success": success, "failed": failed,
@@ -1222,6 +1287,214 @@ def api_public_stats():
     return jsonify({"users": users, "calls": calls, "spam": spam})
 
 
+# ==================== ✅ نظام عجلة الحظ ====================
+WHEEL_PRIZES = [
+    {"label": "0 نقطة", "points": 0, "weight": 40, "color": "#7a869e"},
+    {"label": "1 نقطة", "points": 1, "weight": 30, "color": "#4dd4ff"},
+    {"label": "2 نقطة", "points": 2, "weight": 15, "color": "#a06bff"},
+    {"label": "3 نقاط", "points": 3, "weight": 8, "color": "#4dffa0"},
+    {"label": "5 نقاط", "points": 5, "weight": 5, "color": "#ffd166"},
+    {"label": "10 نقاط", "points": 10, "weight": 2, "color": "#ff4dd2"},
+]
+
+
+@app.route('/api/wheel/status')
+@login_required
+def api_wheel_status():
+    uid = session['user_id']
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('SELECT last_spin, spin_streak FROM users WHERE user_id = ?', (uid,))
+        r = c.fetchone()
+        conn.close()
+    today = datetime.now().strftime('%Y-%m-%d')
+    can_spin = True
+    if r and r[0] == today:
+        can_spin = False
+    return jsonify({
+        "enabled": get_setting("wheel_enabled", "1") == "1",
+        "can_spin": can_spin,
+        "last_spin": r[0] if r else None,
+        "streak": r[1] if r else 0,
+        "prizes": [{"label": p["label"], "color": p["color"]} for p in WHEEL_PRIZES],
+    })
+
+
+@app.route('/api/wheel/spin', methods=['POST'])
+@login_required
+def api_wheel_spin():
+    uid = session['user_id']
+    if get_setting("wheel_enabled", "1") != "1":
+        return jsonify({"error": "العجلة معطلة حالياً"}), 400
+    today = datetime.now().strftime('%Y-%m-%d')
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('SELECT last_spin FROM users WHERE user_id = ?', (uid,))
+        r = c.fetchone()
+        if r and r[0] == today:
+            conn.close()
+            return jsonify({"error": "لقد جربت حظك اليوم! عد غداً"}), 400
+
+        # اختيار الجائزة بناءً على الوزن
+        total_weight = sum(p["weight"] for p in WHEEL_PRIZES)
+        pick = random.randint(1, total_weight)
+        acc = 0
+        chosen_idx = 0
+        for i, p in enumerate(WHEEL_PRIZES):
+            acc += p["weight"]
+            if pick <= acc:
+                chosen_idx = i
+                break
+        prize = WHEEL_PRIZES[chosen_idx]
+
+        c.execute('UPDATE users SET last_spin = ?, spin_streak = spin_streak + 1, points = points + ? WHERE user_id = ?',
+                  (today, prize["points"], uid))
+        conn.commit()
+        conn.close()
+
+    if prize["points"] > 0:
+        add_notification(uid, "🎰", "ربحت من العجلة!", f"+{prize['points']} نقطة")
+    return jsonify({
+        "ok": True,
+        "prize_index": chosen_idx,
+        "label": prize["label"],
+        "points": prize["points"],
+        "new_total": get_user_points(uid),
+    })
+
+
+# ==================== ✅ نظام المهام اليومية ====================
+DAILY_TASKS = [
+    {"key": "call_5", "label": "أكمل 5 مكالمات", "type": "call", "target": 5, "reward": 2},
+    {"key": "call_10", "label": "أكمل 10 مكالمات", "type": "call", "target": 10, "reward": 5},
+    {"key": "spam_10", "label": "أكمل 10 عمليات سبام", "type": "spam", "target": 10, "reward": 3},
+    {"key": "spam_25", "label": "أكمل 25 عملية سبام", "type": "spam", "target": 25, "reward": 7},
+]
+
+
+def update_task_progress(user_id, task_type, delta):
+    """يُحدّث تقدم المهام اليومية (يُستدعى من api_call و api_spam)"""
+    today = datetime.now().strftime('%Y-%m-%d')
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        for task in DAILY_TASKS:
+            if task["type"] != task_type:
+                continue
+            c.execute('''SELECT progress, last_update FROM daily_tasks_progress
+                         WHERE user_id = ? AND task_key = ?''', (user_id, task["key"]))
+            r = c.fetchone()
+            if r and r[1] == today:
+                c.execute('''UPDATE daily_tasks_progress SET progress = progress + ?
+                             WHERE user_id = ? AND task_key = ?''',
+                          (delta, user_id, task["key"]))
+            else:
+                c.execute('''INSERT OR REPLACE INTO daily_tasks_progress
+                             (user_id, task_key, progress, claimed, last_update)
+                             VALUES (?, ?, ?, 0, ?)''',
+                          (user_id, task["key"], delta, today))
+        conn.commit()
+        conn.close()
+
+
+@app.route('/api/tasks')
+@login_required
+def api_tasks():
+    uid = session['user_id']
+    today = datetime.now().strftime('%Y-%m-%d')
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        out = []
+        for task in DAILY_TASKS:
+            c.execute('''SELECT progress, claimed, last_update FROM daily_tasks_progress
+                         WHERE user_id = ? AND task_key = ?''', (uid, task["key"]))
+            r = c.fetchone()
+            if r and r[2] == today:
+                progress, claimed = r[0], bool(r[1])
+            else:
+                progress, claimed = 0, False
+            out.append({
+                "key": task["key"],
+                "label": task["label"],
+                "target": task["target"],
+                "reward": task["reward"],
+                "progress": progress,
+                "claimed": claimed,
+                "completed": progress >= task["target"],
+            })
+        conn.close()
+    return jsonify({
+        "enabled": get_setting("tasks_enabled", "1") == "1",
+        "tasks": out,
+    })
+
+
+@app.route('/api/tasks/claim', methods=['POST'])
+@login_required
+def api_tasks_claim():
+    uid = session['user_id']
+    data = request.get_json() or {}
+    key = data.get('key')
+    task = next((t for t in DAILY_TASKS if t["key"] == key), None)
+    if not task:
+        return jsonify({"error": "مهمة غير موجودة"}), 400
+    today = datetime.now().strftime('%Y-%m-%d')
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('''SELECT progress, claimed, last_update FROM daily_tasks_progress
+                     WHERE user_id = ? AND task_key = ?''', (uid, key))
+        r = c.fetchone()
+        if not r or r[2] != today:
+            conn.close()
+            return jsonify({"error": "لم تبدأ المهمة بعد"}), 400
+        progress, claimed, _ = r
+        if progress < task["target"]:
+            conn.close()
+            return jsonify({"error": "لم تكمل المهمة بعد"}), 400
+        if claimed:
+            conn.close()
+            return jsonify({"error": "استلمت المكافأة بالفعل"}), 400
+        c.execute('''UPDATE daily_tasks_progress SET claimed = 1
+                     WHERE user_id = ? AND task_key = ?''', (uid, key))
+        c.execute('UPDATE users SET points = points + ? WHERE user_id = ?', (task["reward"], uid))
+        conn.commit()
+        conn.close()
+    add_notification(uid, "🎯", "أكملت مهمة!", f"+{task['reward']} نقطة: {task['label']}")
+    return jsonify({"ok": True, "reward": task["reward"], "new_total": get_user_points(uid)})
+
+
+# ==================== ✅ VIP تنبيه قرب انتهاء ====================
+def check_vip_expiry_notifications():
+    """يرسل إشعار قبل 3 أيام من انتهاء VIP"""
+    try:
+        today = datetime.now().date()
+        soon = (today + timedelta(days=3)).strftime('%Y-%m-%d')
+        with db_lock:
+            conn = get_conn()
+            c = conn.cursor()
+            c.execute('''SELECT user_id, vip_expiry FROM users
+                         WHERE is_vip = 1 AND vip_expiry = ?''', (soon,))
+            rows = c.fetchall()
+            for uid, expiry in rows:
+                c.execute('''SELECT COUNT(*) FROM notifications
+                             WHERE user_id = ? AND title LIKE '%VIP%' AND created_at LIKE ?''',
+                          (uid, today.strftime('%Y-%m-%d') + '%'))
+                if c.fetchone()[0] == 0:
+                    c.execute('''INSERT INTO notifications (user_id, icon, title, body, created_at)
+                                 VALUES (?, '👑', 'تنبيه انتهاء VIP', ?, ?)''',
+                              (uid, f"اشتراكك ينتهي بتاريخ {expiry}. جدّد الآن!",
+                               datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        logger.error(f"VIP check error: {e}")
+
+
+# ==================== Admin APIs ====================
 @app.route('/api/admin/stats')
 @admin_required
 def api_admin_stats():
@@ -1261,7 +1534,9 @@ def api_admin_add_points():
         amount = int(data.get('amount'))
     except Exception:
         return jsonify({"error": "بيانات غير صحيحة"}), 400
+    actor = session['user_id']
     update_user_points(target, amount)
+    log_admin_action(actor, "add_points", target, f"amount={amount}")
     if amount > 0:
         add_notification(target, "💎", "تمت إضافة نقاط", f"+{amount} نقطة إلى رصيدك")
     return jsonify({"ok": True, "points": get_user_points(target)})
@@ -1283,6 +1558,8 @@ def api_admin_add_vip():
         c.execute('UPDATE users SET is_vip = 1, vip_expiry = ? WHERE user_id = ?', (expiry, target))
         conn.commit()
         conn.close()
+    actor = session['user_id']
+    log_admin_action(actor, "add_vip", target, f"days={days}")
     add_notification(target, "👑", "تم تفعيل VIP", f"حتى {expiry}")
     return jsonify({"ok": True, "expiry": expiry})
 
@@ -1323,6 +1600,9 @@ def api_admin_broadcast():
 
     for uid in recipients:
         add_notification(uid, "📢", "رسالة إدارية", message)
+
+    actor = session['user_id']
+    log_admin_action(actor, "broadcast", None, f"target={target_type}, count={len(recipients)}")
 
     sent = 0
     if TOKEN and TOKEN != "YOUR_TOKEN_HERE":
@@ -1376,6 +1656,67 @@ def api_admin_support_inbox():
     ]})
 
 
+# ✅ جديد: سجل عمليات الأدمن
+@app.route('/api/admin/log')
+@admin_required
+def api_admin_log():
+    try:
+        limit = min(int(request.args.get('limit', 50)), 200)
+    except Exception:
+        limit = 50
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('''SELECT id, actor_id, actor_role, action, target_id, details, created_at
+                     FROM admin_actions_log ORDER BY id DESC LIMIT ?''', (limit,))
+        rows = c.fetchall()
+        conn.close()
+    return jsonify({"items": [
+        {"id": r[0], "actor_id": r[1], "actor_role": r[2], "action": r[3],
+         "target_id": r[4], "details": r[5], "time": r[6]}
+        for r in rows
+    ]})
+
+
+# ✅ جديد: إدارة المشرفين (للمالك فقط)
+@app.route('/api/owner/add_moderator', methods=['POST'])
+@owner_required
+def api_owner_add_moderator():
+    data = request.get_json() or {}
+    try:
+        target = int(data.get('user_id'))
+    except Exception:
+        return jsonify({"error": "معرّف غير صحيح"}), 400
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('UPDATE users SET is_moderator = 1 WHERE user_id = ?', (target,))
+        conn.commit()
+        conn.close()
+    log_admin_action(session['user_id'], "add_moderator", target)
+    add_notification(target, "🛡️", "تم رفعك مشرفاً")
+    return jsonify({"ok": True})
+
+
+@app.route('/api/owner/remove_moderator', methods=['POST'])
+@owner_required
+def api_owner_remove_moderator():
+    data = request.get_json() or {}
+    try:
+        target = int(data.get('user_id'))
+    except Exception:
+        return jsonify({"error": "معرّف غير صحيح"}), 400
+    with db_lock:
+        conn = get_conn()
+        c = conn.cursor()
+        c.execute('UPDATE users SET is_moderator = 0 WHERE user_id = ?', (target,))
+        conn.commit()
+        conn.close()
+    log_admin_action(session['user_id'], "remove_moderator", target)
+    return jsonify({"ok": True})
+
+
+# ==================== Owner APIs ====================
 @app.route('/api/owner/status')
 @owner_required
 def api_owner_status():
@@ -1388,8 +1729,15 @@ def api_owner_status():
         channels = [r[0] for r in c.fetchall()]
         c.execute('SELECT user_id FROM users WHERE is_admin = 1')
         admins = [r[0] for r in c.fetchall()]
+        c.execute('SELECT user_id FROM users WHERE is_moderator = 1')
+        moderators = [r[0] for r in c.fetchall()]
         conn.close()
-    return jsonify({"buttons": btns, "limits": limits, "channels": channels, "admins": admins})
+    return jsonify({
+        "buttons": btns, "limits": limits, "channels": channels,
+        "admins": admins, "moderators": moderators,
+        "wheel_enabled": get_setting("wheel_enabled", "1") == "1",
+        "tasks_enabled": get_setting("tasks_enabled", "1") == "1",
+    })
 
 
 @app.route('/api/owner/toggle/<service>', methods=['POST'])
@@ -1399,6 +1747,20 @@ def api_owner_toggle(service):
         return jsonify({"error": "خدمة غير صحيحة"}), 400
     current = get_setting(f"btn_{service}", "1") == "1"
     set_setting(f"btn_{service}", "1" if not current else "0")
+    log_admin_action(session['user_id'], f"toggle_{service}", None, f"new={not current}")
+    return jsonify({"ok": True, "enabled": not current})
+
+
+@app.route('/api/owner/toggle_feature', methods=['POST'])
+@owner_required
+def api_owner_toggle_feature():
+    data = request.get_json() or {}
+    feature = data.get('feature')
+    if feature not in ('wheel_enabled', 'tasks_enabled'):
+        return jsonify({"error": "ميزة غير صحيحة"}), 400
+    current = get_setting(feature, "1") == "1"
+    set_setting(feature, "1" if not current else "0")
+    log_admin_action(session['user_id'], f"toggle_{feature}", None, f"new={not current}")
     return jsonify({"ok": True, "enabled": not current})
 
 
@@ -1414,6 +1776,7 @@ def api_owner_set_limit():
     if service not in DEFAULT_LIMITS:
         return jsonify({"error": "خدمة غير صحيحة"}), 400
     set_setting(f"limit_{service}", str(limit))
+    log_admin_action(session['user_id'], "set_limit", None, f"{service}={limit}")
     return jsonify({"ok": True, "limit": limit})
 
 
@@ -1431,6 +1794,7 @@ def api_owner_add_admin():
         c.execute('UPDATE users SET is_admin = 1 WHERE user_id = ?', (target,))
         conn.commit()
         conn.close()
+    log_admin_action(session['user_id'], "add_admin", target)
     add_notification(target, "🛡️", "تم رفعك أدمن")
     return jsonify({"ok": True})
 
@@ -1451,6 +1815,7 @@ def api_owner_remove_admin():
         c.execute('UPDATE users SET is_admin = 0 WHERE user_id = ?', (target,))
         conn.commit()
         conn.close()
+    log_admin_action(session['user_id'], "remove_admin", target)
     return jsonify({"ok": True})
 
 
@@ -1514,6 +1879,7 @@ def api_vip():
 
 if __name__ == '__main__':
     reset_daily_limits()
+    check_vip_expiry_notifications()
     print("=" * 60)
     print("🌐 موقع nero - يعمل الآن")
     print(f"📍 افتح المتصفح على: http://localhost:{os.environ.get('PORT', 5000)}")
